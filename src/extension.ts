@@ -22,11 +22,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	console.log('Activating Sid\'s Assistant extension...');
 	
 	try {
-		console.log('Attempting to dynamically import Ollama...');
-		// Dynamically import Ollama
 		const { Ollama } = await import('ollama');
 
-		// Create Ollama client
 		const ollama = new Ollama();
 		console.log('Ollama client created successfully');
 
@@ -47,7 +44,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			} catch (error) {
 				console.error('Error refreshing models:', error);
 				vscode.window.showErrorMessage('Failed to refresh Ollama models. Make sure Ollama is running.');
-				// Still update status bar with default value
 				updateStatusBar();
 			}
 		});
@@ -63,7 +59,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		// Initial models check - but don't show UI and don't wait for it to finish activation
 		checkOllamaModels(ollama).catch(error => {
 			console.log('Error during initial models check:', error);
-			// Still allow extension to activate even if initial model check fails
 		});
 
 		// define a chat handler
@@ -80,16 +75,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			} catch (error) {
 				console.error("Error connecting to Ollama:", error);
 				console.log('Sending error message to user about Ollama connection');
-				stream.markdown(`
-**Error:** Unable to connect to Ollama. 
-
-Please make sure:
-1. Ollama is installed on your system. If not, visit [ollama.ai](https://ollama.ai) to download and install it.
-2. Ollama is running on http://localhost:11434.
-3. You have at least one model installed. You can install models by running \`ollama pull MODEL_NAME\` in your terminal.
-
-For more information, see the [Ollama documentation](https://github.com/ollama/ollama).
-`);
+				stream.markdown(`**Error:** Unable to connect to Ollama. `);
 				return;
 			}
 
@@ -100,21 +86,17 @@ For more information, see the [Ollama documentation](https://github.com/ollama/o
 
 			// Check if the model exists
 			try {
-				console.log(`Checking if model "${selectedModel}" exists...`);
 				const models = await ollama.list();
-				console.log('Available models:', models.models.map((m: any) => m.name).join(', '));
 				
 				const modelExists = models.models.some((model: { name: string }) => model.name === selectedModel);
 				
 				if (!modelExists) {
-					console.log(`Model "${selectedModel}" not found`);
 					stream.markdown(`**Error:** The model "${selectedModel}" is not available in Ollama. Please select a different model from the dropdown or run \`ollama pull ${selectedModel}\` in your terminal to download it.`);
 					return;
 				}
 				console.log(`Model "${selectedModel}" found`);
 			} catch (error) {
 				console.error("Error checking model availability:", error);
-				console.log('Sending error message about model availability');
 				stream.markdown("**Error:** Unable to check if the model is available. Please make sure Ollama is running correctly.");
 				return;
 			}
@@ -141,7 +123,6 @@ For more information, see the [Ollama documentation](https://github.com/ollama/o
 			const previousMessages = context.history.filter(
 				(h) => h instanceof vscode.ChatResponseTurn
 			);
-			console.log(`Found ${previousMessages.length} previous messages`);
 
 			// add the previous messages to the messages array
 			previousMessages.forEach((m) => {
@@ -155,10 +136,8 @@ For more information, see the [Ollama documentation](https://github.com/ollama/o
 
 			// add in the user's message
 			messages.push({ role: "user", content: request.prompt });
-			console.log(`Total messages in conversation: ${messages.length}`);
 			
 			try {
-				console.log(`Sending request to Ollama with model: ${selectedModel}`);
 				// Use the Ollama npm package to generate a streaming response
 				const response = await ollama.chat({
 					model: selectedModel,
@@ -185,16 +164,8 @@ For more information, see the [Ollama documentation](https://github.com/ollama/o
 						console.log(`CHUNK ${chunkCount} has no content`);
 					}
 				}
-				
-				console.log('FULL RESPONSE PREVIEW (first 200 chars):', fullResponse.substring(0, 200));
-				
-				if (fullResponse.length > 0) {
-					console.log('FULL RESPONSE PREVIEW (last 200 chars):', fullResponse.substring(Math.max(0, fullResponse.length - 200)));
-				}
 			} catch (error) {
 				console.error("Error communicating with Ollama:", error);
-				console.log('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-				console.log('Sending error message about Ollama communication');
 				stream.markdown("**Error:** Unable to communicate with the local Ollama instance.");
 			}
 
@@ -203,19 +174,12 @@ For more information, see the [Ollama documentation](https://github.com/ollama/o
 		};
 
 		// create participant
-		console.log('Creating chat participant...');
 		const assistant = vscode.chat.createChatParticipant("chat-tutorial.sids-assistant", handler);
-		console.log('Chat participant created successfully');
-		
-		// add icon to participant
-		console.log('Setting participant icon...');
 		assistant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'tutor.jpeg');
-		console.log('Participant icon set successfully');
-		
+		console.log('Chat participant created successfully');
 		console.log('Extension activation completed successfully');
 	} catch (error) {
 		console.error('CRITICAL ERROR during extension activation:', error);
-		// Rethrow to ensure VS Code sees the error
 		throw error;
 	}
 }
@@ -225,23 +189,17 @@ For more information, see the [Ollama documentation](https://github.com/ollama/o
  */
 async function checkOllamaModels(ollama: any): Promise<void> {
 	try {
-		// Get the list of models from Ollama
 		const modelsList = await ollama.list();
 		
 		if (!modelsList.models || modelsList.models.length === 0) {
 			console.log('No Ollama models found. Will use default if needed.');
 		} else {
-			console.log(`Found ${modelsList.models.length} Ollama models:`, modelsList.models.map((m: any) => m.name).join(', '));
-			
 			// Check if the currently selected model exists
 			const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
 			const selectedModel = config.get<string>(CONFIG_MODEL) || DEFAULT_MODEL;
-			
 			const modelExists = modelsList.models.some((model: { name: string }) => model.name === selectedModel);
+			
 			if (!modelExists) {
-				console.log(`Selected model "${selectedModel}" not found in available models`);
-				
-				// If the first model is available, set it as the selected model
 				if (modelsList.models.length > 0) {
 					const firstModelName = modelsList.models[0].name;
 					console.log(`Setting first available model "${firstModelName}" as selected model`);
@@ -252,11 +210,9 @@ async function checkOllamaModels(ollama: any): Promise<void> {
 			}
 		}
 		
-		// Update status bar with current model
 		updateStatusBar();
 	} catch (error) {
 		console.error('Error checking Ollama models:', error);
-		// Still update the status bar even if there was an error
 		updateStatusBar();
 	}
 }
@@ -264,7 +220,7 @@ async function checkOllamaModels(ollama: any): Promise<void> {
 /**
  * Updates the list of available Ollama models and shows a quick pick to select one
  */
-async function updateModelsListWithUI(ollama: any, context: vscode.ExtensionContext) {
+async function updateModelsListWithUI(ollama: any, _context: vscode.ExtensionContext) {
 	try {
 		// Get the list of models from Ollama
 		const modelsList = await ollama.list();
