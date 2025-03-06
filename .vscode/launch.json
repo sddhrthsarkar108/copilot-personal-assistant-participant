@@ -17,9 +17,6 @@
 				"${workspaceFolder}/out/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-			"env": {
-				"NODE_TLS_REJECT_UNAUTHORIZED": "0"
-			}
 		},
 		{
 			"name": "Extension Tests",
@@ -33,9 +30,6 @@
 				"${workspaceFolder}/out/test/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-			"env": {
-				"NODE_TLS_REJECT_UNAUTHORIZED": "0"
-			}
 		}
 	]
 }

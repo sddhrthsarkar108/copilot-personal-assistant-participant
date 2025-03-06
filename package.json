@@ -1,7 +1,7 @@
 {
-  "name": "code-tutor",
-  "displayName": "Code Tutor",
-  "description": "",
+  "name": "sids-assistant",
+  "displayName": "Sid's Assistant",
+  "description": "Personal AI assistant powered by local Ollama models",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.93.0"
@@ -10,24 +10,47 @@
     "AI",
     "Chat"
   ],
-  "activationEvents": [],
+  "type": "commonjs",
+  "activationEvents": [
+    "onChat:chat-tutorial.sids-assistant"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "chatParticipants": [
       {
-        "id": "chat-tutorial.code-tutor",
-        "fullName": "Code Tutor",
-        "name": "tutor",
-        "description": "What can I teach you?",
+        "id": "chat-tutorial.sids-assistant",
+        "fullName": "Sid's Assistant",
+        "name": "assistant",
+        "description": "Your personal AI assistant (powered by Ollama)",
         "isSticky": true,
         "commands": [
+          {
+            "name": "tutor",
+            "description": "Switch to tutor mode for learning concepts"
+          },
           {
             "name": "exercise",
             "description": "Provide exercises to practice a concept."
           }
         ]
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "sids-assistant.refreshModels",
+        "title": "Sid's Assistant: Refresh and Select Ollama Models"
+      }
+    ],
+    "configuration": {
+      "title": "Sid's Assistant",
+      "properties": {
+        "sidsAssistant.selectedModel": {
+          "type": "string",
+          "default": "llama3.2:3b",
+          "description": "The Ollama model to use for Sid's Assistant"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
