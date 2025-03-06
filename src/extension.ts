@@ -1,12 +1,7 @@
 import * as vscode from 'vscode';
+import { BASE_PROMPT, DSA_COACH_PROMPT } from './prompts';
 
 console.log('Extension module loaded - before activation');
-
-const BASE_PROMPT = 'You are a helpful AI assistant named Sid\'s Assistant. You help with a wide variety of tasks including answering questions, providing information, assisting with coding tasks, explaining concepts, and more. Try to be concise but thorough in your responses. If you don\'t know something, admit it rather than making up an answer.';
-
-const TUTOR_PROMPT = 'You are a helpful code tutor. Your job is to teach the user with simple descriptions and sample code of the concept. Respond with a guided overview of the concept in a series of messages. Do not give the user the answer directly, but guide them to find the answer themselves. If the user asks a non-programming question, politely decline to respond.';
-
-const EXERCISES_PROMPT = 'You are a helpful tutor. Your job is to teach the user with fun, simple exercises that they can complete in the editor. Your exercises should start simple and get more complex as the user progresses. Move one concept at a time, and do not move on to the next concept until the user provides the correct answer. Give hints in your exercises to help the user learn. If the user is stuck, you can provide the answer and explain why it is the answer. If the user asks a non-programming question, politely decline to respond.';
 
 // Default model to use if none is selected
 const DEFAULT_MODEL = 'llama3.2:3b';
@@ -104,12 +99,9 @@ export async function activate(context: vscode.ExtensionContext) {
 			// initialize the prompt based on command
 			let prompt = BASE_PROMPT;
 
-			if (request.command === 'tutor') {
+			if (request.command === 'dsa_coach') {
 				console.log('Using tutor prompt');
-				prompt = TUTOR_PROMPT;
-			} else if (request.command === 'exercise') {
-				console.log('Using exercise prompt');
-				prompt = EXERCISES_PROMPT;
+				prompt = DSA_COACH_PROMPT;
 			} else {
 				console.log('Using base prompt');
 			}
@@ -151,14 +143,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 				// Process the streaming response
 				let chunkCount = 0;
-				let fullResponse = '';
 				
 				for await (const chunk of response) {
 					chunkCount++;
 					
 					if (chunk.message?.content) {
-						// Log the actual content
-						fullResponse += chunk.message.content;
 						stream.markdown(chunk.message.content);
 					} else {
 						console.log(`CHUNK ${chunkCount} has no content`);
@@ -175,7 +164,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		// create participant
 		const assistant = vscode.chat.createChatParticipant("chat-tutorial.sids-assistant", handler);
-		assistant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'tutor.jpeg');
+		assistant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'dsa_coach.jpeg');
 		console.log('Chat participant created successfully');
 		console.log('Extension activation completed successfully');
 	} catch (error) {
